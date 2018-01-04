@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
-#include <string.h>
 #include "file_util.h"
 static const struct
 {
@@ -16,8 +15,23 @@ static const struct
     {  0.6f, -0.4f, 0.f, 1.f, 0.f },
     {   0.f,  0.6f, 0.f, 0.f, 1.f }
 };
-
-
+/*static const char* vertex_shader_text =
+"uniform mat4 MVP;\n"
+"attribute vec3 vCol;\n"
+"attribute vec2 vPos;\n"
+"varying vec3 color;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
+"    color = vCol;\n"
+"}\n";
+static const char* fragment_shader_text =
+"varying vec3 color;\n"
+"void main()\n"
+"{\n"
+"    gl_FragColor = vec4(color, 1.0);\n"
+"}\n";
+*/
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -64,14 +78,17 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     
 
-    const char* vertex_shader_text = read_file2("./shaders/2d.vert");
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    
+    const char* vertex_shader_text = readFile("shaders/2d.vert");
+
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
     glCompileShader(vertex_shader);
     
-
-    const char* fragment_shader_text = read_file2("./shaders/2d.frag");
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    const char* fragment_shader_text = readFile("shaders/2d.frag");
+
     glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
     glCompileShader(fragment_shader);
     
@@ -96,7 +113,6 @@ int main(void)
         float ratio;
         int width, height;
         mat4x4 m, p, mvp;
-
         glfwGetFramebufferSize(window, &width, &height);
         ratio = width / (float) height;
         glViewport(0, 0, width, height);

@@ -33,3 +33,15 @@ target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 #linmath
 set(LIN_MATH_DIR "${LIB_DIR}/linmath.h")
 target_include_directories(${PROJECT_NAME} PRIVATE "${LIN_MATH_DIR}")
+
+#shaders
+set(SHADER_DIR "${SRC_DIR}/shaders")
+
+#utils
+set(UTIL_DIR "${LIB_DIR}/util")
+target_include_directories(${PROJECT_NAME} PRIVATE "${UTIL_DIR}")
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${SRC_DIR}/shaders
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders)
