@@ -45,7 +45,7 @@ static std::string read_shader_file (const char *shader_file)
     return sstr.str();
 }
 
-const char* read_file2(const char *path)
+const char* read_ascii_2_char(const char *path)
 {
 	std::ifstream file (path, std::ios::in|std::ios::binary|std::ios::ate);
 if (file.is_open())

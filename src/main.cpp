@@ -6,6 +6,8 @@
 #include <string>
 #include <string.h>
 #include "file_util.h"
+#define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
+#include "tiny_obj_loader.h"
 static const struct
 {
     float x, y;
@@ -17,6 +19,62 @@ static const struct
     {   0.f,  0.6f, 0.f, 0.f, 1.f }
 };
 
+static std::vector<tinyobj::shape_t> load_obj(const char* dir, const char* obj_name){
+	//TODO separate into other file
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+  
+	std::string err;
+	
+	std::string path = dir;
+	//TODO check for / and .obj in dir and obj_name
+	path += obj_name;
+
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str(), dir);
+  
+	if (!err.empty()) { // `err` may contain warning message.
+	  std::cerr << err << std::endl;
+	}
+
+	if (!ret) {
+	  exit(1);
+	}
+
+	// Loop over shapes
+	for (size_t s = 0; s < shapes.size(); s++) {
+	  // Loop over faces(polygon)
+	  size_t index_offset = 0;
+	  for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+	    int fv = shapes[s].mesh.num_face_vertices[f];
+	
+	    // Loop over vertices in the face.
+	    for (size_t v = 0; v < fv; v++) {
+	      // access to vertex
+	      tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+	      tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+	      tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+	      tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+	      tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+	      tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+	      tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+	      
+	      //TODO this gives a segfault with no textures, so check that they exist
+	      //tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+	      //tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+	      // Optional: vertex colors
+	      // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+	      // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+	      // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+	    }
+	    index_offset += fv;
+	
+	    // per-face material
+	    shapes[s].mesh.material_ids[f];
+	  }
+	}
+
+}
 
 static void error_callback(int error, const char* description)
 {
@@ -56,21 +114,24 @@ int main(void)
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
     glfwSwapInterval(1);
     // NOTE: OpenGL error checks have been omitted for brevity
-    
+    // TODO add OpenGL error checks
     
 
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+
+    std::vector <tinyobj::shape_t> obj_shapes = load_obj("assets/","untitled.obj");
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     
 
-    const char* vertex_shader_text = read_file2("./shaders/2d.vert");
+    const char* vertex_shader_text = read_ascii_2_char("./shaders/2d.vert");
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
     glCompileShader(vertex_shader);
     
 
-    const char* fragment_shader_text = read_file2("./shaders/2d.frag");
+    const char* fragment_shader_text = read_ascii_2_char("./shaders/2d.frag");
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
     glCompileShader(fragment_shader);

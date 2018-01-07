@@ -4,3 +4,6 @@
 [submodule "libs/linmath.h"]
 	path = libs/linmath.h
 	url = git@github.com:datenwolf/linmath.h.git
+[submodule "libs/tinyobjloader"]
+	path = libs/tinyobjloader
+	url = git@github.com:syoyo/tinyobjloader.git

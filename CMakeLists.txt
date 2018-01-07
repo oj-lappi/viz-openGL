@@ -34,14 +34,27 @@ target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 set(LIN_MATH_DIR "${LIB_DIR}/linmath.h")
 target_include_directories(${PROJECT_NAME} PRIVATE "${LIN_MATH_DIR}")
 
-#shaders
-set(SHADER_DIR "${SRC_DIR}/shaders")
-
-#utils
+#custom utils
 set(UTIL_DIR "${LIB_DIR}/util")
 target_include_directories(${PROJECT_NAME} PRIVATE "${UTIL_DIR}")
+
+#shaders
+set(SHADER_DIR "${SRC_DIR}/renderer/shaders")
+
+#assets
+set(ASSET_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+
+#tinyobjloader
+set(TINYOBJ_DIR "${LIB_DIR}/tinyobjloader")
+add_subdirectory("${TINYOBJ_DIR}")
+target_link_libraries(${PROJECT_NAME} "tinyobjloader")
+target_include_directories(${PROJECT_NAME} PRIVATE "${TINYOBJ_DIR}/include")
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${SRC_DIR}/shaders
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${ASSET_DIR}
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets)
