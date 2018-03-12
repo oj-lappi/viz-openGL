@@ -8,6 +8,16 @@
 #include "file_util.h"
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "tiny_obj_loader.h"
+static const struct
+{
+    float x, y;
+    float r, g, b;
+} vertices[3] =
+{
+    { -0.6f, -0.4f, 1.f, 0.f, 0.f },
+    {  0.6f, -0.4f, 0.f, 1.f, 0.f },
+    {   0.f,  0.6f, 0.f, 0.f, 1.f }
+};
 
 struct vertex3d
 {
@@ -65,9 +75,9 @@ static std::vector<tinyobj::shape_t> load_obj(const char* dir, const char* obj_n
 	      // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
 	      // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
 	      // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
-	//	printf("index:%i\n",idx);
-	  //    	printf("vertex: \n x:%f y:%f z:%f\n",vx,vy,vz);
-	    //  	printf("normal: \n x:%f y:%f z:%f\n",nx,ny,nz);
+		printf("index:%i\n",idx);
+	      	printf("vertex: \n x:%f y:%f z:%f\n",vx,vy,vz);
+	      	printf("normal: \n x:%f y:%f z:%f\n",nx,ny,nz);
 		vertices3d[i++]={vx,vy,vz,nx,ny,nz,((i%3==0)?1.f:0.f),((i%3==1)?1.f:0.f),((i%3==2)?1.f:0.f)};
 
 	    }
@@ -94,9 +104,7 @@ int main(void)
 {
     GLFWwindow* window;
     GLuint vertex_buffer, vertex_shader, fragment_shader, program;
-    GLint mv_location, tr_location, rot_location,
-	  vpos_location, vcol_location, vnorm_location;
-    
+    GLint mvp_location, vpos_location, vcol_location, vnorm_location;
     glfwSetErrorCallback(error_callback);
     
     if (!glfwInit())
@@ -106,9 +114,7 @@ int main(void)
     
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    
-    
-    window = glfwCreateWindow(640, 480, "3d woah", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
     
     if (!window)
     {
@@ -150,10 +156,7 @@ int main(void)
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
     
-    mv_location = glGetUniformLocation(program, "MV");
-    tr_location = glGetUniformLocation(program, "TR");
-    rot_location = glGetUniformLocation(program, "ROT");
-
+    mvp_location = glGetUniformLocation(program, "MVP");
     vpos_location = glGetAttribLocation(program, "vPos");
     vcol_location = glGetAttribLocation(program, "vCol");
     vnorm_location = glGetAttribLocation(program, "vNorm");
@@ -174,25 +177,21 @@ int main(void)
     {
         float ratio;
         int width, height;
-        mat4x4 m, p, mvp, tr, rot;
-	
+        mat4x4 m, p, mvp;
 
         glfwGetFramebufferSize(window, &width, &height);
         ratio = width / (float) height;
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
-        //mat4x4_identity(m);
-        //mat4x4_rotate_Z(m, m, (float) glfwGetTime());
-        //mat4x4_rotate_X(mvp, m, (float) glfwGetTime());
+        mat4x4_identity(m);
+        mat4x4_rotate_Z(m, m, (float) glfwGetTime());
+        mat4x4_rotate_X(m, m, (float) glfwGetTime());
 
-	
-
-        //mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        //mat4x4_mul(mvp, p, m);
-	
+        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+        mat4x4_mul(mvp, p, m);
         glUseProgram(program);
-        glUniformMatrix4fv(mv_location, 1, GL_FALSE, (const GLfloat*) mvp);
-        glDrawArrays(GL_TRIANGLES, 0, 12);
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
